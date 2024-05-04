@@ -11,6 +11,7 @@ The goal of the first assignment is twofold:
 Deliver by the 5th of May the following docs:
 	1) Requirements Document V1.
 	2) Estimation Document V1.
+	3) GUI Protorype V1.
 Deliver the code for following tasks:
 	1) GUI prototype for V1.
 
