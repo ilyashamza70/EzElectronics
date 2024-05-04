@@ -1,0 +1,27 @@
+{
+  "name": "ts-node",
+  "version": "1.0.0",
+  "description": "missing piece, install globally remmber, changing file changes dev and env",
+  "main": "index.js",
+  "scripts": {
+    "test": "Alpha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilyashamza70/EzElectronics.git"
+  },
+  "keywords": [
+    "Electronic",
+    "store",
+    "management"
+  ],
+  "author": "Hamza Ilyas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ilyashamza70/EzElectronics/issues"
+  },
+  "homepage": "https://github.com/ilyashamza70/EzElectronics#readme",
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
