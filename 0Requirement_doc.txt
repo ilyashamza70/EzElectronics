@@ -1,2 +1,0 @@
-EzElectronics Requirement doc
-git branch --unset-upstream
