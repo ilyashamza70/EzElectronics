@@ -1,0 +1,77 @@
+[33mcommit d029a773f02a116ae2e84b36e2cc755618930f9e[m[33m ([m[1;36mHEAD -> [m[1;32mtask2-template[m[33m, [m[1;33mtag: list[m[33m, [m[1;31morigin/task2-template[m[33m)[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sat May 18 15:18:28 2024 +0200
+
+    Added main from GitLab repo for task2
+
+[33mcommit c37d3a6654f05319ab549c3c9ec47153e550a169[m[33m ([m[1;33mtag: v3.0[m[33m, [m[1;33mtag: v0.3[m[33m, [m[1;31morigin/templates[m[33m, [m[1;32mtemplates[m[33m)[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sun May 5 01:59:05 2024 +0200
+
+    This should be final version for templates branch.(Add in description) Here you can start your project and follow the realizationa and optimaization of this application.
+
+[33mcommit 74f984a51aa9694651d8d4fbeb95b554a441f125[m[33m ([m[1;33mtag: v0.2[m[33m)[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sun May 5 01:47:21 2024 +0200
+
+    Remove miscellaneous file appeared without reasoning??
+
+[33mcommit 6d6d6b1fa7468bebadd15f725ec5331ebf085931[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sun May 5 01:44:44 2024 +0200
+
+    final version of templates branch
+
+[33mcommit c57424b2ee0743ebd635d81fe68a8fc90305c88c[m[33m ([m[1;33mtag: v1.1[m[33m)[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sun May 5 01:28:41 2024 +0200
+
+    Deleted 'Requirement_doc' and 'Requirement_doc.txt' files.
+    
+    This commit removes the files 'Requirement_doc' and 'Requirement_doc.txt' from the repository. The contents and reasons
+
+[33mcommit e6110ade97003032fb95571d557370c3d35630f5[m[33m ([m[1;33mtag: v1.0[m[33m)[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sat May 4 13:27:37 2024 +0200
+
+    Added all docs from GitLab
+
+[33mcommit 81687316f0a1097816f081dcdc6e53cb56570231[m[33m ([m[1;33mtag: v0.1[m[33m)[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sat May 4 13:07:32 2024 +0200
+
+    Added The templates given from prof. for V1. Try to follow as much as possible and complete with missing data!
+    Report back in Live Q&A sessions on Tuesdays and Thursadays.
+
+[33mcommit 6ea57385f04512bad1b2133272ce63d8a7d590b8[m
+Merge: 1d6ed46 24a3687
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sat May 4 11:29:23 2024 +0200
+
+    Starting with the Merge to local repo of branch 'main' of git repo:https://github.com/ilyashamza70/EzElectronics
+
+[33mcommit 1d6ed46ec654154f269c95c584321a5368219ff7[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sat May 4 11:26:29 2024 +0200
+
+    Commit with modification of File and renaming!
+
+[33mcommit 675eb7954bf94892c274b5eb8e5e7475850c8479[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Sat May 4 11:19:58 2024 +0200
+
+    Added Requirement_doc, add original copy from confluence company page!
+
+[33mcommit 24a368740fcc38a7ac90450c398096af1f6a7fc4[m
+Author: Hamza Ilyas <70276386+ilyashamza70@users.noreply.github.com>
+Date:   Fri May 3 16:14:01 2024 +0200
+
+    Update README.md
+    
+    Added readme description
+
+[33mcommit 066b64b3a794dd6b15f2281e102b1401afe257f2[m
+Author: ilyashamza70 <ilyashamza63@gmail.com>
+Date:   Mon Apr 29 10:59:56 2024 +0200
+
+    Add .gitattributes, .gitignore, README.md, and LICENSE.txt.
