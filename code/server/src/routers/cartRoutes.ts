@@ -3,7 +3,7 @@ import ErrorHandler from "../helper"
 import { body, param } from "express-validator"
 import CartController from "../controllers/cartController"
 import Authenticator from "./auth"
-import Cart from "../components/cart"
+import { Cart } from "../components/cart"
 
 /**
  * Represents a class that defines the routes for handling carts.
@@ -51,7 +51,7 @@ class CartRoutes {
         this.router.get(
             "/",
             (req: any, res: any, next: any) => this.controller.getCart(req.user)
-                .then((cart: any) => {
+                .then((cart: any /**Cart */) => {
                     res.status(200).json(cart)
                 })
                 .catch((err) => {
@@ -60,24 +60,26 @@ class CartRoutes {
         )
 
         /**
-         * Route for adding a product to the cart of the logged in customer.
+         * Route for adding a product unit to the cart of the logged in customer.
          * It requires the user to be logged in and to be a customer.
-         * It requires the following parameters:
-         * - productId: string. It cannot be empty, it must be a valid product id, it must represent a product that is not already in a cart and that has not been sold yet.
+         * It requires the following body parameters:
+         * - model: string. It cannot be empty, it must represent an existing product model, and the product model's available quantity must be above 0
          * It returns a 200 status code if the product was added to the cart.
          */
         this.router.post(
             "/",
-            (req: any, res: any, next: any) => this.controller.addToCart(req.user, req.body.productId)
+            (req: any, res: any, next: any) => this.controller.addToCart(req.user, req.body.model)
                 .then(() => res.status(200).end())
-                .catch((err) => next(err))
+                .catch((err) => {
+                    next(err)
+                })
         )
 
         /**
          * Route for checking out the cart of the logged in customer.
          * It requires the user to be logged in and to be a customer.
          * It returns a 200 status code if the cart was checked out.
-         * It fails if the cart is empty.
+         * It fails if the cart is empty, there is no current cart in the database, or at least one of the products in the cart is not available in the required quantity.
          */
         this.router.patch(
             "/",
@@ -96,21 +98,19 @@ class CartRoutes {
         this.router.get(
             "/history",
             (req: any, res: any, next: any) => this.controller.getCustomerCarts(req.user)
-                .then((carts: any) => res.status(200).json(carts))
+                .then((carts: any /**Cart[] */) => res.status(200).json(carts))
                 .catch((err) => next(err))
         )
 
         /**
-         * Route for removing a product from a cart.
+         * Route for removing a product unit from a cart.
          * It requires the user to be logged in and to be a customer.
-         * It requires the following parameters:
-         * - cartId: number. It cannot be empty, it must be a valid cart id, the cart must belong to the logged in user, and it cannot be a cart that has been paid for.
-         * - productId: string. It cannot be empty, it must be a valid product id, it must represent a product that is in the cart.
+         * It requires the model of the product to remove as a route parameter. The model must be a non-empty string, the product must exist, must be in the current cart, and the customer must have a current cart
          * It returns a 200 status code if the product was removed from the cart.
          */
         this.router.delete(
-            "/products/:productId",
-            (req: any, res: any, next: any) => this.controller.removeFromCart(req.user, req.params.productId, req.params.cartId)
+            "/products/:model",
+            (req: any, res: any, next: any) => this.controller.removeProductFromCart(req.user, req.params.model)
                 .then(() => res.status(200).end())
                 .catch((err) => {
                     next(err)
@@ -118,28 +118,39 @@ class CartRoutes {
         )
 
         /**
-         * Route for deleting a cart.
+         * Route for removing all products from the current cart.
          * It requires the user to be logged in and to be a customer.
-         * It requires the following parameters:
-         * - cartId: number. It cannot be empty, it must be a valid cart id, the cart must belong to the logged in user.
+         * It fails if the user does not have a current cart.
+         * It returns a 200 status code if the products were removed from the cart.
          */
         this.router.delete(
             "/current",
-            (req: any, res: any, next: any) => this.controller.deleteCart(req.user, req.params.cartId)
+            (req: any, res: any, next: any) => this.controller.clearCart(req.user)
                 .then(() => res.status(200).end())
                 .catch((err) => next(err))
         )
 
         /**
          * Route for deleting all carts.
-         * It does not require authentication.
+         * It requires the user to be authenticated and to be either an admin or a manager.
          * It returns a 200 status code.
-         * This route is only for testing purposes (allows to delete all carts and have an empty database).
          */
         this.router.delete(
             "/",
             (req: any, res: any, next: any) => this.controller.deleteAllCarts()
                 .then(() => res.status(200).end())
+                .catch((err: any) => next(err))
+        )
+
+        /**
+         * Route for retrieving all carts of all users
+         * It requires the user to be authenticated and to be either an admin or a manager.
+         * It returns an array of carts.
+         */
+        this.router.get(
+            "/all",
+            (req: any, res: any, next: any) => this.controller.getAllCarts()
+                .then((carts: any/**Cart[] */) => res.status(200).json(carts))
                 .catch((err: any) => next(err))
         )
     }

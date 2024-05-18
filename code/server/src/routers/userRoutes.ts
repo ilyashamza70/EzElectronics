@@ -46,12 +46,12 @@ class UserRoutes {
         /**
          * Route for creating a user.
          * It does not require authentication.
-         * It requires the following parameters:
+         * It requires the following body parameters:
          * - username: string. It cannot be empty and it must be unique (an existing username cannot be used to create a new user)
          * - name: string. It cannot be empty.
          * - surname: string. It cannot be empty.
          * - password: string. It cannot be empty.
-         * - role: string (one of "Manager", "Customer")
+         * - role: string (one of "Manager", "Customer", "Admin")
          * It returns a 200 status code.
          */
         this.router.post(
@@ -65,69 +65,82 @@ class UserRoutes {
 
         /**
          * Route for retrieving all users.
-         * It does not require authentication.
+         * It requires the user to be logged in and to be an admin.
          * It returns an array of users.
-         * This route is only for testing purposes (allows to retrieve all users without any authentication or authorization checks)
          */
         this.router.get(
             "/",
             (req: any, res: any, next: any) => this.controller.getUsers()
-                .then((users: any) => res.status(200).json(users))
+                .then((users: any /**User[] */) => res.status(200).json(users))
                 .catch((err) => next(err))
         )
 
         /**
          * Route for retrieving all users of a specific role.
-         * It does not require authentication.
-         * It expects the role of the users in the request parameters: the role must be one of ("Manager", "Customer").
+         * It requires the user to be logged in and to be an admin.
+         * It expects the role of the users in the request parameters: the role must be one of ("Manager", "Customer", "Admin").
          * It returns an array of users.
-         * This route is only for testing purposes (allows to retrieve all users of a specific role without any authentication or authorization checks)
          */
         this.router.get(
             "/roles/:role",
             (req: any, res: any, next: any) => this.controller.getUsersByRole(req.params.role)
-                .then((users: any) => res.status(200).json(users))
+                .then((users: any /**User[] */) => res.status(200).json(users))
                 .catch((err) => next(err))
         )
 
         /**
          * Route for retrieving a user by its username.
-         * It does not require authentication.
+         * It requires the user to be authenticated: users with an Admin role can retrieve data of any user, users with a different role can only retrieve their own data.
          * It expects the username of the user in the request parameters: the username must represent an existing user.
          * It returns the user.
-         * This route is only for testing purposes (allows to retrieve a user by its username without any authentication or authorization checks)
          */
         this.router.get(
             "/:username",
-            (req: any, res: any, next: any) => this.controller.getUserByUsername(req.params.username)
-                .then((user: any) => res.status(200).json(user))
+            (req: any, res: any, next: any) => this.controller.getUserByUsername(req.user, req.params.username)
+                .then((user: any /**User */) => res.status(200).json(user))
                 .catch((err) => next(err))
         )
 
         /**
          * Route for deleting a user.
-         * It does not require authentication.
+         * It requires the user to be authenticated: users with an Admin role can delete the data of any user (except other Admins), users with a different role can only delete their own data.
          * It expects the username of the user in the request parameters: the username must represent an existing user.
          * It returns a 200 status code.
-         * This route is only for testing purposes (allows to delete a user by its username without any authentication or authorization checks)
          */
         this.router.delete(
             "/:username",
-            (req: any, res: any, next: any) => this.controller.deleteUser(req.params.username)
+            (req: any, res: any, next: any) => this.controller.deleteUser(req.user, req.params.username)
                 .then(() => res.status(200).end())
                 .catch((err: any) => next(err))
         )
 
         /**
          * Route for deleting all users.
-         * It does not require authentication.
+         * It requires the user to be logged in and to be an admin.
          * It returns a 200 status code.
-         * This route is only for testing purposes (allows to delete all users and have an empty database).
          */
         this.router.delete(
             "/",
             (req: any, res: any, next: any) => this.controller.deleteAll()
                 .then(() => res.status(200).end())
+                .catch((err: any) => next(err))
+        )
+
+        /**
+         * Route for updating the information of a user.
+         * It requires the user to be authenticated.
+         * It expects the username of the user to edit in the request parameters: if the user is not an Admin, the username must match the username of the logged in user. Admin users can edit other non-Admin users.
+         * It requires the following body parameters:
+         * - name: string. It cannot be empty.
+         * - surname: string. It cannot be empty.
+         * - address: string. It cannot be empty.
+         * - birthdate: date. It cannot be empty, it must be a valid date in format YYYY-MM-DD, and it cannot be after the current date
+         * It returns the updated user.
+         */
+        this.router.patch(
+            "/:username",
+            (req: any, res: any, next: any) => this.controller.updateUserInfo(req.user, req.body.name, req.body.surname, req.body.address, req.body.birthdate, req.params.username)
+                .then((user: any /**User */) => res.status(200).json(user))
                 .catch((err: any) => next(err))
         )
 
@@ -184,7 +197,7 @@ class AuthRoutes {
 
         /**
          * Route for logging out the currently logged in user.
-         * It requires the user to be logged in.
+         * It expects the user to be logged in.
          * It returns a 200 status code.
          */
         this.router.delete(
@@ -196,7 +209,7 @@ class AuthRoutes {
 
         /**
          * Route for retrieving the currently logged in user.
-         * It requires the user to be logged in.
+         * It expects the user to be logged in.
          * It returns the logged in user.
          */
         this.router.get(

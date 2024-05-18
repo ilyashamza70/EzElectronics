@@ -1,6 +1,4 @@
 import { User } from "../components/user";
-import { Product } from "../components/product";
-import Cart from "../components/cart";
 import CartDAO from "../dao/cartDAO";
 
 /**
@@ -15,60 +13,66 @@ class CartController {
     }
 
     /**
-     * Retrieves the cart for a specific user.
-     * @param user - The user for whom to retrieve the cart.
-     * @returns A Promise that resolves to the user's cart or `false` if the cart doesn't exist.
-     */
-    async getCart(user: User) {
-    }
-
-    /**
-     * Adds a product to the user's cart.
+     * Adds a product to the user's cart. If the product is already in the cart, the quantity should be increased by 1.
+     * If the product is not in the cart, it should be added with a quantity of 1.
+     * If there is no current unpaid cart in the database, then a new cart should be created.
      * @param user - The user to whom the product should be added.
-     * @param productId - The ID of the product to add.
+     * @param productId - The model of the product to add.
      * @returns A Promise that resolves to `true` if the product was successfully added.
      */
-    async addToCart(user: User, productId: string) { }
+    async addToCart(user: User, product: string)/*: Promise<Boolean>*/ { }
+
 
     /**
-     * Checks out the user's cart.
+     * Retrieves the current cart for a specific user.
+     * @param user - The user for whom to retrieve the cart.
+     * @returns A Promise that resolves to the user's cart or an empty one if there is no current cart.
+     */
+    async getCart(user: User)/*: Cart*/ { }
+
+    /**
+     * Checks out the user's cart. We assume that payment is always successful, there is no need to implement anything related to payment.
      * @param user - The user whose cart should be checked out.
      * @returns A Promise that resolves to `true` if the cart was successfully checked out.
-     * All products that are in the cart must have their selling date set to the current date (in format YYYY-MM-DD).
+     * 
      */
-    async checkoutCart(user: User) { }
+    async checkoutCart(user: User) /**Promise<Boolean> */ { }
 
     /**
-     * Retrieves all carts for a specific customer.
+     * Retrieves all paid carts for a specific customer.
      * @param user - The customer for whom to retrieve the carts.
      * @returns A Promise that resolves to an array of carts belonging to the customer.
      * Only the carts that have been checked out should be returned, the current cart should not be included in the result.
      */
-    async getCustomerCarts(user: User) { }
+    async getCustomerCarts(user: User) { } /**Promise<Cart[]> */
 
     /**
-     * Removes a product from the user's cart.
-     * @param user - The user from whom to remove the product.
-     * @param productId - The ID of the product to remove.
-     * @param cartId - The ID of the cart from which to remove the product.
+     * Removes one product unit from the current cart. In case there is more than one unit in the cart, only one should be removed.
+     * @param user The user who owns the cart.
+     * @param product The model of the product to remove.
      * @returns A Promise that resolves to `true` if the product was successfully removed.
      */
-    async removeFromCart(user: User, productId: string, cartId: number) { }
+    async removeProductFromCart(user: User, product: string) /**Promise<Boolean> */ { }
 
 
     /**
-     * Deletes a specific cart.
+     * Removes all products from the current cart.
      * @param user - The user who owns the cart.
-     * @param cartId - The ID of the cart to delete.
-     * @returns A Promise that resolves to `true` if the cart was successfully deleted.
+     * @returns A Promise that resolves to `true` if the cart was successfully cleared.
      */
-    async deleteCart(user: User, cartId: number) { }
+    async clearCart(user: User)/*:Promise<Boolean> */ { }
 
     /**
-     * Deletes all carts.
+     * Deletes all carts of all users.
      * @returns A Promise that resolves to `true` if all carts were successfully deleted.
      */
-    async deleteAllCarts() { }
+    async deleteAllCarts() /**Promise<Boolean> */ { }
+
+    /**
+     * Retrieves all carts in the database.
+     * @returns A Promise that resolves to an array of carts.
+     */
+    async getAllCarts() /*:Promise<Cart[]> */ { }
 }
 
 export default CartController

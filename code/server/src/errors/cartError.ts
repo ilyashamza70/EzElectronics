@@ -2,6 +2,7 @@ const CART_NOT_FOUND = "Cart not found"
 const PRODUCT_IN_CART = "Product already in cart"
 const PRODUCT_NOT_IN_CART = "Product not in cart"
 const WRONG_USER_CART = "Cart belongs to another user"
+const EMPTY_CART = "Cart is empty"
 
 /**
  * Represents an error that occurs when a cart is not found.
@@ -59,6 +60,15 @@ class WrongUserCartError extends Error {
     }
 }
 
+class EmptyCartError extends Error {
+    customMessage: string
+    customCode: number
 
+    constructor() {
+        super()
+        this.customMessage = EMPTY_CART
+        this.customCode = 400
+    }
+}
 
-export { CartNotFoundError, ProductInCartError, ProductNotInCartError, WrongUserCartError }
+export { CartNotFoundError, ProductInCartError, ProductNotInCartError, WrongUserCartError, EmptyCartError }

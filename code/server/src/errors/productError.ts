@@ -1,6 +1,8 @@
 const PRODUCT_NOT_FOUND = "Product not found"
 const PRODUCT_ALREADY_EXISTS = "The product already exists"
 const PRODUCT_SOLD = "Product already sold"
+const EMPTY_PRODUCT_STOCK = "Product stock is empty"
+const LOW_PRODUCT_STOCK = "Product stock cannot satisfy the requested quantity"
 
 /**
  * Represents an error that occurs when a product is not found.
@@ -44,4 +46,26 @@ class ProductSoldError extends Error {
     }
 }
 
-export { ProductNotFoundError, ProductAlreadyExistsError, ProductSoldError }
+class EmptyProductStockError extends Error {
+    customMessage: string
+    customCode: number
+
+    constructor() {
+        super()
+        this.customMessage = EMPTY_PRODUCT_STOCK
+        this.customCode = 409
+    }
+}
+
+class LowProductStockError extends Error {
+    customMessage: string
+    customCode: number
+
+    constructor() {
+        super()
+        this.customMessage = LOW_PRODUCT_STOCK
+        this.customCode = 409
+    }
+}
+
+export { ProductNotFoundError, ProductAlreadyExistsError, ProductSoldError, EmptyProductStockError, LowProductStockError }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.ts",
-    "test": "SET NODE_ENV=test && jest --runInBand --coverage --colors --detectOpenHandles --forceExit --verbose"
+    "test": "set NODE_ENV=test && jest --runInBand --coverage --colors --detectOpenHandles --forceExit --verbose"
   },
   "keywords": [],
   "author": "",

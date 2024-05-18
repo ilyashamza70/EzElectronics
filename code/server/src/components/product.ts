@@ -2,32 +2,30 @@
  * Represents a product offered by the online store.
  */
 class Product {
-    code: string;
     sellingPrice: number;
     model: string;
     category: Category;
     arrivalDate: string | null;
-    sellingDate: string | null;
     details: string | null;
+    quantity: number
+
 
     /**
      * Creates a new instance of the Product class.
-     * @param code - The product code. Every product has a unique code.
-     * @param sellingPrice - The selling price of the product. This is the price at which the product is sold to the customer.
-     * @param model - The model of the product. This is the name of the product.
-     * @param category - The category of the product. This is the type of product.
-     * @param arrivalDate - The arrival date of the product at the store.
-     * @param sellingDate - The selling date of the product, is null if the product has not been sold yet. 
-     * @param details - Additional details about the product, can be null.
+     * @param sellingPrice The price at which a single product unit is sold.
+     * @param model The unique model of the product
+     * @param category The category of the product. It can only be one of the three allowed types ("Smartphone", "Laptop", "Appliance")
+     * @param arrivalDate The date in which the first units of the product arrived at the store
+     * @param details The optional details of the product
+     * @param quantity The available quantity of the product (number of units). If it is 0, the product is out of stock.
      */
-    constructor(code: string, sellingPrice: number, model: string, category: Category, arrivalDate: string | null, sellingDate: string | null, details: string | null) {
-        this.code = code;
+    constructor(sellingPrice: number, model: string, category: Category, arrivalDate: string | null, details: string | null, quantity: number) {
         this.sellingPrice = sellingPrice;
         this.model = model;
         this.category = category;
         this.arrivalDate = arrivalDate;
-        this.sellingDate = sellingDate;
         this.details = details;
+        this.quantity = quantity;
     }
 }
 
@@ -39,6 +37,5 @@ enum Category {
     LAPTOP = "Laptop",
     APPLIANCE = "Appliance",
 }
-
 
 export { Product, Category }

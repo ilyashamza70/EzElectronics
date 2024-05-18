@@ -4,6 +4,7 @@ import Authenticator from "./routers/auth"
 import { UserRoutes, AuthRoutes } from "./routers/userRoutes"
 import ProductRoutes from "./routers/productRoutes"
 import CartRoutes from "./routers/cartRoutes"
+import ReviewRoutes from "./routers/reviewRoutes"
 
 const morgan = require("morgan")
 const prefix = "/ezelectronics"
@@ -33,6 +34,7 @@ function initRoutes(app: express.Application) {
     const authRoutes = new AuthRoutes(authenticator)
     const productRoutes = new ProductRoutes(authenticator)
     const cartRoutes = new CartRoutes(authenticator)
+    const reviewRoutes = new ReviewRoutes(authenticator)
 
     /**
      * The routes for the user, authentication, product, proposal, and cart resources are defined here.
@@ -41,6 +43,7 @@ function initRoutes(app: express.Application) {
     app.use(`${prefix}/sessions`, authRoutes.getRouter())
     app.use(`${prefix}/products`, productRoutes.getRouter())
     app.use(`${prefix}/carts`, cartRoutes.getRouter())
+    app.use(`${prefix}/reviews`, reviewRoutes.getRouter())
 
     ErrorHandler.registerErrorHandler(app)
 }

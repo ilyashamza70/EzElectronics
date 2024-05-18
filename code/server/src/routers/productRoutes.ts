@@ -45,128 +45,98 @@ class ProductRoutes {
     initRoutes() {
 
         /**
-         * Route for registering a product.
+         * Route for registering the arrival of a set of products.
          * It requires the user to be logged in and to be a manager.
          * It requires the following parameters:
-         * - code: string. It cannot be empty, it must be at least 6 characters long, and it must be unique (an existing code cannot be used to register a new product)
-         * - sellingPrice: number. It must be greater than 0.
-         * - model: string. It cannot be empty.
+         * - model: string. It cannot be empty and it cannot be repeated in the database.
          * - category: string (one of "Smartphone", "Laptop", "Appliance")
-         * - details: string. It can be empty.
-         * - arrivalDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD.
-         * It returns the code of the registered product.
-         */
-        this.router.post(
-            "/",
-            (req: any, res: any, next: any) => this.controller.registerProduct(req.body.code, req.body.sellingPrice, req.body.model, req.body.category, req.body.details, req.body.arrivalDate)
-                .then((code: any) => res.status(200).json(code))
-                .catch((err) => {
-                    next(err)
-                })
-        )
-
-        /**
-         * Route for registering the arrival of a set of proposed products.
-         * It requires the user to be logged in and to be a manager.
-         * It requires the following parameters:
-         * - model: string. It cannot be empty.
-         * - category: string (one of "Smartphone", "Laptop", "Appliance")
-         * - details: string. It cannot be empty.
          * - quantity: number. It must be greater than 0.
-         * - arrivalDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD and it cannot be earlier than the proposal's reception date.
+         * - details: string. It can be empty.
          * - sellingPrice: number. It must be greater than 0.
+         * - arrivalDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD that is not after the current date
          * It returns a 200 status code if the arrival was registered successfully.
          */
         this.router.post(
-            "/arrivals",
-            (req: any, res: any, next: any) => this.controller.registerArrival(req.body.model, req.body.category, req.body.details, req.body.quantity, req.body.arrivalDate, req.body.sellingPrice)
+            "/",
+            (req: any, res: any, next: any) => this.controller.registerProducts(req.body.model, req.body.category, req.body.quantity, req.body.details, req.body.sellingPrice, req.body.arrivalDate)
                 .then(() => res.status(200).end())
+                .catch((err) => next(err))
+        )
+
+        /**
+         * Route for registering the increase in quantity of a product.
+         * It requires the user to be logged in and to be a manager.
+         * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
+         * It requires the following body parameters:
+         * - quantity: number. It must be greater than 0. This number represents the increase in quantity, to be added to the existing quantity.
+         * - changeDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD that is not after the current date and is after the arrival date of the product.
+         * It returns the new quantity of the product.
+         */
+        this.router.patch(
+            "/:model",
+            (req: any, res: any, next: any) => this.controller.changeProductQuantity(req.params.model, req.body.quantity, req.body.changeDate)
+                .then((quantity: any /**number */) => res.status(200).json({ quantity: quantity }))
                 .catch((err) => next(err))
         )
 
         /**
          * Route for selling a product.
          * It requires the user to be logged in and to be a manager.
-         * It requires the following parameters:
-         * - code: string. It cannot be empty, it must be a valid product code and it cannot be a product that has already been sold.
-         * - sellingDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD and it cannot be earlier than the product's arrival date.
-         * It returns a 200 status code if the product was sold successfully.
+         * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
+         * It requires the following body parameters:
+         * - quantity: number. It must be greater than 0. This number represents the quantity of units sold. It must be less than or equal to the available quantity of the product.
+         * - sellingDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD that is not after the current date and is after the arrival date of the product.
+         * It returns the new quantity of the product.
          */
         this.router.patch(
-            "/:code",
-            (req: any, res: any, next: any) => this.controller.sellProduct(req.params.code, req.body.sellingDate)
-                .then(() => res.status(200).end())
-                .catch((err) => next(err))
+            "/:model/sell",
+            (req: any, res: any, next: any) => this.controller.sellProduct(req.params.model, req.body.quantity, req.body.sellingDate)
+                .then((quantity: any /**number */) => res.status(200).json({ quantity: quantity }))
+                .catch((err) => {
+                    console.log(err)
+                    next(err)
+                })
         )
 
         /**
          * Route for retrieving all products.
-         * It requires the user to be logged in.
-         * It accepts an optional query parameter "sold" that can be "yes" or "no":
-         *  - If the parameter is "yes", it returns only the products that have been sold (their selling date is not null)
-         *  - If the parameter is "no", it returns only the products that have not been sold (their selling date is null)
-         *  - If the parameter is not present, it returns all the products.
-         * It returns an array of products.
+         * It requires the user to be logged in and to be either an admin or a manager
+         * It can have the following optional query parameters:
+         * - grouping: string. It can be either "category" or "model". If absent, then all products are returned and the other query parameters must also be absent.
+         * - category: string. It can only be present if grouping is equal to "category" (in which case it must be present) and, when present, it must be one of "Smartphone", "Laptop", "Appliance".
+         * - model: string. It can only be present if grouping is equal to "model" (in which case it must be present and not empty).
+         * It returns an array of Product objects.
          */
         this.router.get(
             "/",
-            (req: any, res: any, next: any) => this.controller.getProducts(req.query.sold)
-                .then((products: any) => res.status(200).json(products))
-                .catch((err) => next(err))
+            (req: any, res: any, next: any) => this.controller.getProducts(req.query.grouping, req.query.category, req.query.model)
+                .then((products: any /*Product[]*/) => res.status(200).json(products))
+                .catch((err) => {
+                    console.log(err)
+                    next(err)
+                })
         )
 
         /**
-         * Route for retrieving a product by its code.
-         * It requires the user to be logged in.
-         * It requires the code of the product in the request parameters: the code must represent an existing product.
-         * It returns the product.
+         * Route for retrieving all available products.
+         * It requires the user to be logged in and to be a customer.
+         * It can have the following optional query parameters:
+         * - grouping: string. It can be either "category" or "model". If absent, then all products are returned and the other query parameters must also be absent.
+         * - category: string. It can only be present if grouping is equal to "category" (in which case it must be present) and, when present, it must be one of "Smartphone", "Laptop", "Appliance".
+         * - model: string. It can only be present if grouping is equal to "model" (in which case it must be present and not empty).
+         * It returns an array of Product objects.
          */
         this.router.get(
-            "/:code",
-            (req: any, res: any, next: any) => this.controller.getProduct(req.params.code)
-                .then((product: any) => res.status(200).json(product))
-                .catch((err) => next(err))
-        )
-
-        /**
-         * Route for retrieving all products of a specific category.
-         * It requires the user to be logged in.
-         * It requires the category of the products in the request parameters: the category must be one of "Smartphone", "Laptop", "Appliance".
-         * It accepts an optional query parameter "sold" that can be "yes" or "no":
-         * - If the parameter is "yes", it returns only the products that have been sold (their selling date is not null)
-         * - If the parameter is "no", it returns only the products that have not been sold (their selling date is null)
-         * - If the parameter is not present, it returns all the products of the category.
-         * It returns an array of products.
-         */
-        this.router.get(
-            "/category/:category",
-            (req: any, res: any, next: any) => this.controller.getProductsByCategory(req.params.category, req.query.sold)
-                .then((products: any) => res.status(200).json(products))
-                .catch((err) => next(err))
-        )
-
-        /**
-         * Route for retrieving all products of a specific model.
-         * It requires the user to be logged in.
-         * It requires the model of the products in the request parameters: the model cannot be empty.
-         * It accepts an optional query parameter "sold" that can be "yes" or "no":
-         * - If the parameter is "yes", it returns only the products that have been sold (their selling date is not null)
-         * - If the parameter is "no", it returns only the products that have not been sold (their selling date is null)
-         * - If the parameter is not present, it returns all the products of the model.
-         * It returns an array of products.
-         */
-        this.router.get(
-            "/model/:model",
-            (req: any, res: any, next: any) => this.controller.getProductsByModel(req.params.model, req.query.sold)
-                .then((products: any) => res.status(200).json(products))
+            "/available",
+            (req: any, res: any, next: any) => this.controller.getAvailableProducts(req.query.grouping, req.query.category, req.query.model)
+                .then((products: any/*Product[]*/) => res.status(200).json(products))
                 .catch((err) => next(err))
         )
 
         /**
          * Route for deleting all products.
-         * It does not require authentication.
+         * It requires the user to be logged in and to be either an admin or a manager.
          * It returns a 200 status code.
-         * This route is only for testing purposes (allows to delete all products and have an empty database).
          */
         this.router.delete(
             "/",
@@ -177,16 +147,18 @@ class ProductRoutes {
 
         /**
          * Route for deleting a product.
-         * It requires the user to be logged in and to be a manager.
-         * It requires the code of the product in the request parameters: the code must represent an existing product.
+         * It requires the user to be logged in and to be either an admin or a manager.
+         * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
          * It returns a 200 status code.
          */
         this.router.delete(
-            "/:code",
-            (req: any, res: any, next: any) => this.controller.deleteProduct(req.params.code)
+            "/:model",
+            (req: any, res: any, next: any) => this.controller.deleteProduct(req.params.model)
                 .then(() => res.status(200).end())
                 .catch((err: any) => next(err))
         )
+
+
     }
 }
 

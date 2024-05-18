@@ -6,6 +6,8 @@ class User {
     name: string
     surname: string
     role: Role
+    address: string
+    birthdate: string
 
     /**
      * Creates a new instance of the User class.
@@ -13,12 +15,16 @@ class User {
      * @param name - The name of the user.
      * @param surname - The surname of the user.
      * @param role - The role of the user. This can be "Manager" or "Customer".
+     * @param address - The address of the user. Is null when the user is created, can be updated later.
+     * @param birthdate - The birthdate of the user. Is null when the user is created, can be updated later.
      */
-    constructor(username: string, name: string, surname: string, role: Role) {
+    constructor(username: string, name: string, surname: string, role: Role, address: string, birthdate: string) {
         this.username = username
         this.name = name
         this.surname = surname
         this.role = role
+        this.address = address
+        this.birthdate = birthdate
     }
 }
 
@@ -28,7 +34,8 @@ class User {
  */
 enum Role {
     MANAGER = "Manager",
-    CUSTOMER = "Customer"
+    CUSTOMER = "Customer",
+    ADMIN = "Admin"
 }
 
 export { User, Role }
