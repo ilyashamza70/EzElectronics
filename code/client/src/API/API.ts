@@ -186,7 +186,7 @@ async function registerProducts(productInfo: Product) {
             "Content-Type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ model: productInfo.model, category: productInfo.category, details: productInfo.details, sellingPrice: productInfo.sellingPrice, quantity: productInfo.quantity })
+        body: JSON.stringify({ model: productInfo.model, category: productInfo.category, details: productInfo.details, sellingPrice: productInfo.sellingPrice, quantity: productInfo.quantity, arrivalDate: productInfo.arrivalDate })
     })
 
     if (response.ok) {

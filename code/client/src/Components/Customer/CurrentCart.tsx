@@ -121,9 +121,9 @@ function CurrentCart() {
                             <Modal.Title>Cart Recap</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
-                            Total products: {cart.products.length}
+                            Total products: <b>{cart.products.reduce((acc, product) => acc + product.quantity, 0)}</b>
                             <br />
-                            Total cost: {cart.total} €
+                            Total cost: <b>{cart.total} €</b>
                         </Modal.Body>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={() => setShowModal(false)}>

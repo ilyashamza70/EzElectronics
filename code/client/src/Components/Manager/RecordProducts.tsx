@@ -25,6 +25,7 @@ function RecordProducts() {
             setQuantity(0)
             setSellingPrice(0)
             setDetails("")
+            setArrivalDate("")
             setTimeout(() => {
                 setToast(false)
             }, 3000)
@@ -66,6 +67,7 @@ function RecordProducts() {
                             <Form.Control value={quantity} className="mt-3" type="number" placeholder="Enter quantity" onChange={(event) => setQuantity(parseInt(event.target.value))} />
                             <Form.Control value={sellingPrice} className="mt-3" type="number" placeholder="Enter selling price" onChange={(event) => setSellingPrice(parseFloat(event.target.value))} />
                             <Form.Control value={details} className="mt-3" type="text" as="textarea" placeholder="Enter details" onChange={(event) => setDetails(event.target.value)} />
+                            <Form.Control value={arrivalDate} className="mt-3" type="date" placeholder="Enter arrival date" max={new Date().toISOString().split('T')[0]} onChange={(event) => setArrivalDate(event.target.value)} />
                         </Form.Group>
                     </Form>
                 </Row>
@@ -85,6 +87,7 @@ function RecordProducts() {
                                             <br />
                                             Additional details: {details}
                                             <br />
+                                            Arrival date: {arrivalDate}
                                         </Card.Text>
                                     </div>
                                     <i className={`bi ${category === "Smartphone" ? "bi-phone-fill" : category === "Laptop" ? "bi-laptop-fill" : "bi-house-gear-fill"} functIcon`} style={{ color: category === "Smartphone" ? "green" : category === "Laptop" ? "gold" : "cyan" }}></i>

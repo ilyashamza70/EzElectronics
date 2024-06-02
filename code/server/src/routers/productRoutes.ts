@@ -46,7 +46,7 @@ class ProductRoutes {
 
         /**
          * Route for registering the arrival of a set of products.
-         * It requires the user to be logged in and to be a manager.
+         * It requires the user to be logged in and to be either an admin or a manager.
          * It requires the following parameters:
          * - model: string. It cannot be empty and it cannot be repeated in the database.
          * - category: string (one of "Smartphone", "Laptop", "Appliance")
@@ -65,7 +65,7 @@ class ProductRoutes {
 
         /**
          * Route for registering the increase in quantity of a product.
-         * It requires the user to be logged in and to be a manager.
+         * It requires the user to be logged in and to be either an admin or a manager.
          * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
          * It requires the following body parameters:
          * - quantity: number. It must be greater than 0. This number represents the increase in quantity, to be added to the existing quantity.
@@ -81,7 +81,7 @@ class ProductRoutes {
 
         /**
          * Route for selling a product.
-         * It requires the user to be logged in and to be a manager.
+         * It requires the user to be logged in and to be either an admin or a manager.
          * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
          * It requires the following body parameters:
          * - quantity: number. It must be greater than 0. This number represents the quantity of units sold. It must be less than or equal to the available quantity of the product.
@@ -119,7 +119,7 @@ class ProductRoutes {
 
         /**
          * Route for retrieving all available products.
-         * It requires the user to be logged in and to be a customer.
+         * It requires the user to be logged in.
          * It can have the following optional query parameters:
          * - grouping: string. It can be either "category" or "model". If absent, then all products are returned and the other query parameters must also be absent.
          * - category: string. It can only be present if grouping is equal to "category" (in which case it must be present) and, when present, it must be one of "Smartphone", "Laptop", "Appliance".

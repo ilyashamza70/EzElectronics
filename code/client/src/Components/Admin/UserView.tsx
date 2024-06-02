@@ -194,7 +194,10 @@ function UserView() {
                 </Row>
                 {error && <Alert variant="danger"> <ReactMarkdown>{error}</ReactMarkdown> </Alert>}
             </Container>
-            {selectedUser && <Modal show={edit}>
+            {selectedUser && <Modal show={edit} onHide={() => {
+                setError("")
+                showEdit(false)
+            }}>
                 <Modal.Header closeButton>
                     <Modal.Title>Edit user information</Modal.Title>
                 </Modal.Header>
