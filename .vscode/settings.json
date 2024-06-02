@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "trial",
+            "group": "EzElectronics",
+            "database": "C:\\Users\\Maria\\OneDrive - Politecnico di Torino\\LENOVOBOOK_backup\\Desktop\\ezelectronics-main\\ezelectronics-main\\code\\server\\src\\db\\db.db"
+        }
+    ]
+}
