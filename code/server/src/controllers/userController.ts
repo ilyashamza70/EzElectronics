@@ -1,5 +1,6 @@
 import { User } from "../components/user"
 import UserDAO from "../dao/userDAO"
+import { Role } from "../components/user"
 
 /**
  * Represents a controller for managing users.
@@ -29,14 +30,18 @@ class UserController {
      * Returns all users.
      * @returns A Promise that resolves to an array of users.
      */
-    async getUsers() /**:Promise<User[]> */ { }
+    async getUsers() /**:Promise<User[]> */ { 
+        return this.dao.getUser()
+    }
 
     /**
      * Returns all users with a specific role.
      * @param role - The role of the users to retrieve. It can only be one of the three allowed types ("Manager", "Customer", "Admin")
      * @returns A Promise that resolves to an array of users with the specified role.
      */
-    async getUsersByRole(role: string) /**:Promise<User[]> */ { }
+    async getUsersByRole(role: string) :Promise<User[]> {
+        return this.dao.getUsersByRole(role as Role);
+     }
 
     /**
      * Returns a specific user.
@@ -46,7 +51,13 @@ class UserController {
      * @param username - The username of the user to retrieve. The user must exist.
      * @returns A Promise that resolves to the user with the specified username.
      */
-    async getUserByUsername(user: User, username: string) /**:Promise<User> */ { }
+    async getUserByUsername(user: User, username: string) :Promise<User>  {
+        if (user.role === Role.ADMIN || user.username === username) {
+            return this.dao.getUserByUsername(username);
+        } else {
+            throw new Error('Unauthorized');
+        }
+     }
 
     /**
      * Deletes a specific user
@@ -56,13 +67,25 @@ class UserController {
      * @param username - The username of the user to delete. The user must exist.
      * @returns A Promise that resolves to true if the user has been deleted.
      */
-    async deleteUser(user: User, username: string) /**:Promise<Boolean> */ { }
+    async deleteUser(user: User, username: string) :Promise<Boolean>  {
+        if (user.role === Role.ADMIN || user.username === username) {
+            return this.dao.deleteUser(username);
+        } else {
+            throw new Error('Unauthorized');
+        }
+     }
 
     /**
      * Deletes all non-Admin users
      * @returns A Promise that resolves to true if all non-Admin users have been deleted.
      */
-    async deleteAll() { }
+    async deleteAll(user: User): Promise<Boolean> { 
+        if (user.role === Role.ADMIN) {
+            return this.dao.deleteAll(user.username);
+        } else {
+            throw new Error('Unauthorized');
+        }
+    }
 
     /**
      * Updates the personal information of one user. The user can only update their own information.
@@ -74,7 +97,10 @@ class UserController {
      * @param username The username of the user to update. It must be equal to the username of the user parameter.
      * @returns A Promise that resolves to the updated user
      */
-    async updateUserInfo(user: User, name: string, surname: string, address: string, birthdate: string, username: string) /**:Promise<User> */ { }
+    async updateUserInfo(user: User, name: string, surname: string, address: string, birthdate: string, username: string) :Promise<User>  {
+        return this.dao.updateUserInfo(user, name, surname, address, birthdate, username)
+
+     }
 }
 
 export default UserController

@@ -2,6 +2,10 @@ import db from "../db/db"
 import { User } from "../components/user"
 import crypto from "crypto"
 import { UserAlreadyExistsError, UserNotFoundError } from "../errors/userError";
+import { resolve } from "path";
+import { rejects } from "assert";
+import { Role } from "../components/user";
+import { error } from "console";
 
 /**
  * A class that implements the interaction with the database for all user-related operations.
@@ -44,6 +48,7 @@ class UserDAO {
         });
     }
 
+
     /**
      * Creates a new user and saves their information in the database
      * @param username The username of the user. It must be unique.
@@ -72,7 +77,90 @@ class UserDAO {
 
         })
     }
+    getUsersByRole(role : Role) :Promise<User[]>{
+        return new Promise<User[]>((resolve,rejects) => {
+            try {
+                const sql = "SELECT * FROM users WHERE role = ?"
+                db.all(sql, [role], (err: Error | null, rows: any[]) => {
+                    if (err) {
+                        rejects(err)
+                        return
+                    }
+                    const users: User[] = rows.map(row => new User(row.username, row.name, row.surname, row.role, row.address, row.birthdate))
+                    resolve(users)
+                })
+            } catch (error) {
+                rejects(error)
+            }
+        })
+    }
+    
+    /**
+     * 
+     * @returns The user if it exist
+     */
+    getUser(): Promise<User>{
+        return new Promise<User>((resolve,rejects) => {
+            try {const sql = "SELECT * FROM users"
+            db.all(sql,)
+        }catch{
+            rejects();
+            }
+        })
+    }
 
+
+    /**
+     * Updates userInfo & Returns a user object from the database based on the username,
+     * Add later error handling for all params and various checks ==> so if else statements
+     * How to display after updating??
+     */
+    updateUserInfo(user: User, name: string, surname: string, address: string, birthdate: string, username: string): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
+            try {
+                if(user.username != username && user.role != Role.ADMIN){
+                    reject(error)
+                    return
+                }
+                const birthday = new Date(birthdate).setHours(0,0,0,0)
+                const today = new Date().setHours(0,0,0,0)
+                if(birthday > today) {
+                    reject(error)
+                    return
+                }
+                const sql = "SELECT username, name, surname, role, address, birthdate FROM users WHERE username = ?"
+                db.get(sql, [username], (err: Error | null, row: any) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    if (!row) {
+                        reject(new UserNotFoundError())
+                        return
+                    }
+                    
+                    if(row.role == Role.ADMIN && user.username != username){
+                        reject(error)
+                        return
+                    }
+                    const sql = "UPDATE users SET name = ?, surname = ?, address = ?, birthdate = ?  WHERE username = ?"
+                    db.run(sql, [name,surname,address,birthdate,username], function (err) {
+                        if(err){
+                            reject(err)
+                            return
+                        }
+                        const update_user = new User(row.username,name,surname,row.role,address,birthdate)
+                        resolve(update_user);
+                    })
+                    })
+            } catch (error) {
+                reject(error)
+            }
+
+        })
+    }
+
+    
     /**
      * Returns a user object from the database based on the username.
      * @param username The username of the user to retrieve
@@ -100,5 +188,42 @@ class UserDAO {
 
         })
     }
+
+    deleteUser(username: string): Promise<Boolean>{
+        return new Promise<Boolean>((resolve, reject) => {
+            try {
+                const sql = "DELETE FROM users WHERE username = ?"
+                db.run(sql, [username], (err: Error | null) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(true)
+                })
+            } catch (error) {
+                reject(error)
+            }
+
+        })
+    }
+    
+    deleteAll(user: string): Promise<Boolean>{
+        return new Promise<Boolean>((resolve, reject) => {
+            try {
+                const sql = "DELETE FROM users WHERE username != ?"
+                db.run(sql, [user], (err: Error | null) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(true)
+                })
+            } catch (error) {
+                reject(error)
+            }
+
+        })
+    }
+
 }
 export default UserDAO
