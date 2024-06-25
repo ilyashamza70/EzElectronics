@@ -55,7 +55,7 @@ class UserController {
         if (user.role === Role.ADMIN || user.username === username) {
             return this.dao.getUserByUsername(username);
         } else {
-            throw new Error('Unauthorized');
+            throw new Error('Unauthorized Action');
         }
      }
 
@@ -71,7 +71,7 @@ class UserController {
         if (user.role === Role.ADMIN || user.username === username) {
             return this.dao.deleteUser(username);
         } else {
-            throw new Error('Unauthorized');
+            throw new Error('Unauthorized Action');
         }
      }
 

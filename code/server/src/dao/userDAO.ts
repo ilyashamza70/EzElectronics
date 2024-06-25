@@ -1,7 +1,7 @@
 import db from "../db/db"
 import { User } from "../components/user"
 import crypto from "crypto"
-import { UserAlreadyExistsError, UserNotFoundError } from "../errors/userError";
+import { UserAlreadyExistsError, UserIsAdminError, UserNotAdminError, UserNotFoundError } from "../errors/userError";
 import { resolve } from "path";
 import { rejects } from "assert";
 import { Role } from "../components/user";
@@ -86,6 +86,10 @@ class UserDAO {
                         rejects(err)
                         return
                     }
+                    if (!rows || rows.length === 0) {
+                        rejects(new UserNotFoundError())
+                        return
+                    }
                     const users: User[] = rows.map(row => new User(row.username, row.name, row.surname, row.role, row.address, row.birthdate))
                     resolve(users)
                 })
@@ -110,55 +114,60 @@ class UserDAO {
     }
 
 
-    /**
-     * Updates userInfo & Returns a user object from the database based on the username,
-     * Add later error handling for all params and various checks ==> so if else statements
-     * How to display after updating??
+   /**
+     * Returns a user object from the database based on a custom username.
+     * @param user The user performing the action
+     * @param name The new name of the user
+     * @param surname The new surname of the user
+     * @param address The new address of the user
+     * @param birthdate The new birthdate of the user
+     * @param username The username of the user to modify
+     * @returns A Promise that resolves the information of the requested user
      */
-    updateUserInfo(user: User, name: string, surname: string, address: string, birthdate: string, username: string): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
-            try {
-                if(user.username != username && user.role != Role.ADMIN){
-                    reject(error)
+   updateUserInfo(user: User, name: string, surname: string, address: string, birthdate: string, username: string): Promise<User> {
+    return new Promise<User>((resolve, reject) => {
+        try {
+            if(user.username != username && user.role != Role.ADMIN){
+                reject(new UserNotAdminError())
+                return
+            }
+            const birthday = new Date(birthdate).setHours(0,0,0,0)
+            const today = new Date().setHours(0,0,0,0)
+            if(birthday > today) {
+                reject(new UserNotFoundError())
+                return
+            }
+            const sql = "SELECT username, name, surname, role, address, birthdate FROM users WHERE username = ?"
+            db.get(sql, [username], (err: Error | null, row: any) => {
+                if (err) {
+                    reject(err)
                     return
                 }
-                const birthday = new Date(birthdate).setHours(0,0,0,0)
-                const today = new Date().setHours(0,0,0,0)
-                if(birthday > today) {
-                    reject(error)
+                if (!row) {
+                    reject(new UserNotFoundError())
                     return
                 }
-                const sql = "SELECT username, name, surname, role, address, birthdate FROM users WHERE username = ?"
-                db.get(sql, [username], (err: Error | null, row: any) => {
-                    if (err) {
+                
+                if(row.role == Role.ADMIN && user.username != username){
+                    reject(new UserNotAdminError())
+                    return
+                }
+                const sql = "UPDATE users SET name = ?, surname = ?, address = ?, birthdate = ?  WHERE username = ?"
+                db.run(sql, [name,surname,address,birthdate,username], function (err) {
+                    if(err){
                         reject(err)
                         return
                     }
-                    if (!row) {
-                        reject(new UserNotFoundError())
-                        return
-                    }
-                    
-                    if(row.role == Role.ADMIN && user.username != username){
-                        reject(error)
-                        return
-                    }
-                    const sql = "UPDATE users SET name = ?, surname = ?, address = ?, birthdate = ?  WHERE username = ?"
-                    db.run(sql, [name,surname,address,birthdate,username], function (err) {
-                        if(err){
-                            reject(err)
-                            return
-                        }
-                        const update_user = new User(row.username,name,surname,row.role,address,birthdate)
-                        resolve(update_user);
-                    })
-                    })
-            } catch (error) {
-                reject(error)
-            }
+                    const update_user = new User(row.username,name,surname,row.role,address,birthdate)
+                    resolve(update_user);
+                })
+                })
+        } catch (error) {
+            reject(error)
+        }
 
-        })
-    }
+    })
+}
 
     
     /**
