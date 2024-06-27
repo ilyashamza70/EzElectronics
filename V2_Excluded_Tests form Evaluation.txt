@@ -1,0 +1,20 @@
+Test cases excluded by evaluation of V2
+
+The following test cases will NOT be considered in the evaluation of V2
+
+Test ID	reason
+Auth 1.1	code given by teachers
+Auth 1.2	code given by teachers
+Auth 2.1	code given by teachers
+Auth 2.2	code given by teachers
+Auth 3.1	code given by teachers
+Auth 3.2	code given by teachers
+Product 6.1	ambiguous
+User 6.2	ambiguous
+User 7.6	ambiguous
+User 7.7	ambiguous
+Cart 2.1	ambiguous
+Cart 7.1	ambiguous
+Review 2.3	missing in API requirements
+Review 4.1	ambiguous
+Review 5.1	ambiguous
