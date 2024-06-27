@@ -101,7 +101,7 @@ class UserDAO {
     
     /**
      * 
-     * @returns The user if it exist
+     * @returns The user if it exists
      */
     getUser(): Promise<User>{
         return new Promise<User>((resolve,rejects) => {
@@ -216,11 +216,11 @@ class UserDAO {
         })
     }
     
-    deleteAll(user: string): Promise<Boolean>{
+    deleteAll(): Promise<Boolean>{
         return new Promise<Boolean>((resolve, reject) => {
             try {
-                const sql = "DELETE FROM users WHERE username != ?"
-                db.run(sql, [user], (err: Error | null) => {
+                const sql = "DELETE FROM users WHERE username != 'Admin'"
+                db.run(sql, (err: Error | null) => {
                     if (err) {
                         reject(err)
                         return

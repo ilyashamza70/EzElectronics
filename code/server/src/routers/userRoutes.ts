@@ -122,7 +122,7 @@ class UserRoutes {
         this.router.delete(
             "/",
             (req: any, res: any, next: any) => this.controller.deleteAll()
-                .then(() => res.status(200).end())
+                .then((user: any /**User */) => res.status(200).json(user))
                 .catch((err: any) => next(err))
         )
 

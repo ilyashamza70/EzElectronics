@@ -79,12 +79,8 @@ class UserController {
      * Deletes all non-Admin users
      * @returns A Promise that resolves to true if all non-Admin users have been deleted.
      */
-    async deleteAll(user: User): Promise<Boolean> { 
-        if (user.role === Role.ADMIN) {
-            return this.dao.deleteAll(user.username);
-        } else {
-            throw new Error('Unauthorized');
-        }
+    async deleteAll(): Promise<Boolean> { 
+        return this.dao.deleteAll()
     }
 
     /**
