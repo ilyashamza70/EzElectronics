@@ -1,0 +1,52 @@
+Last trial: 13:25 25/06/2024
+Login & Logut working!
+Registration, missing username,... all working!
+In the update Profile there is no check for name and surname, can leave emty.
+Only check is for birthdate in rang
+
+#Login as Admin:
+username: admin
+pwd:admin
+name:empty
+surname:empty
+birthday:
+address:empty
+
+#Profile
+Current User
+Update profile working but no checks.
+User role is correctly checked for and viewed.
+
+
+#User View
+Manage User view: nothing is displayed,
+If a Role is specified also admin can view users
+Meaning with Show user of a Specific Role, follow patch and add check.
+
+
+#Cart View
+Manage Carts : Failed
+There are no carts yet.
+Unexpected end of JSON input
+
+#Product Stock
+Manage Products: Failed
+No Products, there are no Products yet.
+Unexpected end of JSON input.
+
+
+#Record new Products
+Working properly but not adding in to the database??
+
+
+
+
+Same issue when logged in as managerù
+username:mamma
+pwd:mamma
+
+
+
+Same issues when logged in as customer
+username:maria1
+pwd:maria
