@@ -52,11 +52,7 @@ class UserController {
      * @returns A Promise that resolves to the user with the specified username.
      */
     async getUserByUsername(user: User, username: string) :Promise<User>  {
-        if (user.role === Role.ADMIN || user.username === username) {
-            return this.dao.getUserByUsername(username);
-        } else {
-            throw new Error('Unauthorized Action');
-        }
+        return this.dao.getUserByUsername(username);
      }
 
     /**

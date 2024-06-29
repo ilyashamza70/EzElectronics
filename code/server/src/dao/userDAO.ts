@@ -1,12 +1,10 @@
 import db from "../db/db"
-import { User } from "../components/user"
 import crypto from "crypto"
-import { UserAlreadyExistsError, UserIsAdminError, UserNotAdminError, UserNotFoundError } from "../errors/userError";
-import { resolve } from "path";
-import { rejects } from "assert";
-import { Role } from "../components/user";
-import { error } from "console";
 
+import { User } from "../components/user"
+import { Role } from "../components/user";
+import { UserNotFoundError, UserAlreadyExistsError, UserNotAdminError, UserBirthDateError }
+from "../errors/userError"
 /**
  * A class that implements the interaction with the database for all user-related operations.
  * You are free to implement any method you need here, as long as the requirements are satisfied.
@@ -134,7 +132,7 @@ class UserDAO {
             const birthday = new Date(birthdate).setHours(0,0,0,0)
             const today = new Date().setHours(0,0,0,0)
             if(birthday > today) {
-                reject(new UserNotFoundError())
+                reject(new UserBirthDateError())
                 return
             }
             const sql = "SELECT username, name, surname, role, address, birthdate FROM users WHERE username = ?"
@@ -178,6 +176,7 @@ class UserDAO {
     getUserByUsername(username: string): Promise<User> {
         return new Promise<User>((resolve, reject) => {
             try {
+                
                 const sql = "SELECT * FROM users WHERE username = ?"
                 db.get(sql, [username], (err: Error | null, row: any) => {
                     if (err) {

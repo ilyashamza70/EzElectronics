@@ -1,0 +1,9 @@
+1)  Starting with User we follow each and all paths from Controllers,DAO,ERROS & ROUTES.
+2)  Same thing for cart which was assgnied to you.
+
+
+
+
+
+3)  Start looking at testing part for User.
+4)  Same for Cart.
