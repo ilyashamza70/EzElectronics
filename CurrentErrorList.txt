@@ -50,3 +50,30 @@ pwd:mamma
 Same issues when logged in as customer
 username:maria1
 pwd:maria
+
+
+
+
+-------------------------------------------------------------------------
+                LOGGED IN AS Admin username: ilyashamza70   pwd:********
+-------------------------------------------------------------------------
+userController -->  All good and reactive
+userDAO        -->  Error in view all users to admin, 
+
+-------------------------------------------------------------------------
+                LOGGED IN AS Customer username: maria1   pwd:*****
+-------------------------------------------------------------------------
+userController -->  All good and reactive
+userDAO        -->  Error in Shop, NO prodcuts Unexpected endo JSON input
+userDAO        -->  Error in viewCart, Enexpected end of JSON input
+            ??? No db currently for products, maybe thats missing?
+            check to see hw it runs after pulling tomorrow morning from .
+            
+-------------------------------------------------------------------------
+                LOGGED IN AS Manager username
+-------------------------------------------------------------------------
+userController -->  All good and reactive
+userDAO        -->  Record new products working, but not saving anything in db?
+               -->  View Stock Error, nothing to view, Unexpected end of 
+                    JSON input.
+               --> Manage carts.. there are no cart, cuz no products.

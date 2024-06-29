@@ -5,6 +5,7 @@ import { User } from "../components/user"
 import { Role } from "../components/user";
 import { UserNotFoundError, UserAlreadyExistsError, UserNotAdminError, UserBirthDateError }
 from "../errors/userError"
+import { error } from "console";
 /**
  * A class that implements the interaction with the database for all user-related operations.
  * You are free to implement any method you need here, as long as the requirements are satisfied.
@@ -96,20 +97,6 @@ class UserDAO {
             }
         })
     }
-    
-    /**
-     * 
-     * @returns The user if it exists
-     */
-    getUser(): Promise<User>{
-        return new Promise<User>((resolve,rejects) => {
-            try {const sql = "SELECT * FROM users"
-            db.all(sql,)
-        }catch{
-            rejects();
-            }
-        })
-    }
 
 
    /**
@@ -167,6 +154,19 @@ class UserDAO {
     })
 }
 
+    /**
+     * 
+     * @returns The user if it exists
+     */
+    getUser(): Promise<User>{
+        return new Promise<User>((resolve,rejects) => {
+            try {const sql = "SELECT * FROM users"
+            db.all(sql,)
+        }catch{
+            rejects(error);
+            }
+        })
+    }
     
     /**
      * Returns a user object from the database based on the username.
