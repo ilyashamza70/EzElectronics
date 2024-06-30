@@ -159,11 +159,13 @@ class UserDAO {
      * @returns The user if it exists
      */
     getUser(): Promise<User>{
-        return new Promise<User>((resolve,rejects) => {
-            try {const sql = "SELECT * FROM users"
+        return new Promise<User>((resolve, rejects) => {
+        try {
+            const sql = "SELECT * FROM users"
             db.all(sql,)
-        }catch{
-            rejects(error);
+        
+        } catch{
+            rejects(new UserNotFoundError);
             }
         })
     }
@@ -176,11 +178,7 @@ class UserDAO {
     getUserByUsername(username: string): Promise<User> {
         return new Promise<User>((resolve, reject) => {
             try {
-                if(user.username != username && user.role != Role.ADMIN){
-                    reject(new UserNotAdminError())
-                    return
-                }
-                const sql = "SELECT * FROM users WHERE username = ?"
+                const sql = "SELECT username, name, surname, role, address, birthdate FROM users WHERE username = ?"
                 db.get(sql, [username], (err: Error | null, row: any) => {
                     if (err) {
                         reject(err)
@@ -190,7 +188,7 @@ class UserDAO {
                         reject(new UserNotFoundError())
                         return
                     }
-                    const user: User = new User(row.username, row.name, row.surname, row.role, row.address, row.birthdate)
+                    const user = new User(row.username, row.name, row.surname, row.role, row.address, row.birthdate)
                     resolve(user)
                 })
             } catch (error) {

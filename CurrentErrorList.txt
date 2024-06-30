@@ -77,3 +77,29 @@ userDAO        -->  Record new products working, but not saving anything in db?
                -->  View Stock Error, nothing to view, Unexpected end of 
                     JSON input.
                --> Manage carts.. there are no cart, cuz no products.
+
+
+
+
+
+Possibly fixed ??
+
+
+-------------------------------------------------------------------------
+                LOGGED IN AS Admin username: ilyashamza70   pwd:********
+-------------------------------------------------------------------------
+userController -->  All good and reactive, profile is uodating with errs
+userDAO        -->  Error in view admin, can't see all view:
+                    MIGHT NOT be errors: SAYS NO FILTER ACTIVE!!!!
+                    Check with prof??
+Vith filter:
+Customer,Managers and admin view is good
+
+-------------------------------------------------------------------------
+                LOGGED IN AS Manager username:mamma pwd:*****
+-------------------------------------------------------------------------
+userController -->  All good and reactive
+userDAO        -->  Record new products working, but not saving anything in db?
+               -->  View Stock Error, nothing to view, Unexpected end of 
+                    JSON input.
+               --> Manage carts.. there are no cart, cuz no products.
