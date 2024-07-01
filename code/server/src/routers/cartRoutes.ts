@@ -1,12 +1,10 @@
 import express, { Router } from "express"
 import ErrorHandler from "../helper"
-import { body, param } from "express-validator"
 import CartController from "../controllers/cartController"
 import Authenticator from "./auth"
-import { Cart } from "../components/cart"
 
 /**
- * Represents a class that defines the routes for handling carts.
+ * Defines routing logic for cart operations.
  */
 class CartRoutes {
     private controller: CartController
@@ -15,9 +13,9 @@ class CartRoutes {
     private authenticator: Authenticator
 
     /**
-     * Constructs a new instance of the CartRoutes class.
-     * @param {Authenticator} authenticator - The authenticator object used for authentication.
-     */
+     * Initializes cart routes with necessary dependencies.
+     * @param {Authenticator} authenticator - Handles user authentication.
+    */
     constructor(authenticator: Authenticator) {
         this.authenticator = authenticator
         this.controller = new CartController()
@@ -27,27 +25,25 @@ class CartRoutes {
     }
 
     /**
-     * Returns the router instance.
-     * @returns The router instance.
-     */
+     * Provides the configured router.
+     * @returns Configured router instance.
+    */
     getRouter(): Router {
         return this.router
     }
 
     /**
-     * Initializes the routes for the cart router.
+     * Configures routes for cart management.
      * 
-     * @remarks
-     * This method sets up the HTTP routes for creating, retrieving, updating, and deleting cart data.
-     * It can (and should!) apply authentication, authorization, and validation middlewares to protect the routes.
-     */
+     * Sets up endpoints for cart operations such as retrieval, addition, and checkout,
+     * ensuring proper authentication and authorization.
+    */
     initRoutes() {
-
         /**
-         * Route for getting the cart of the logged in customer.
-         * It requires the user to be logged in and to be a customer.
-         * It returns the cart of the logged in customer.
-         */
+         * Endpoint to retrieve the current user's cart.
+         * Authentication required.
+         * Responds with the user's cart details.
+        */
         this.router.get(
             "/",
             (req: any, res: any, next: any) => this.controller.getCart(req.user)
@@ -60,12 +56,11 @@ class CartRoutes {
         )
 
         /**
-         * Route for adding a product unit to the cart of the logged in customer.
-         * It requires the user to be logged in and to be a customer.
-         * It requires the following body parameters:
-         * - model: string. It cannot be empty, it must represent an existing product model, and the product model's available quantity must be above 0
-         * It returns a 200 status code if the product was added to the cart.
-         */
+         * Endpoint to add a product to the user's cart.
+         * Authentication required.
+         * Expects 'model' in request body.
+         * Responds with success status on addition.
+        */
         this.router.post(
             "/",
             (req: any, res: any, next: any) => this.controller.addToCart(req.user, req.body.model)
@@ -76,10 +71,10 @@ class CartRoutes {
         )
 
         /**
-         * Route for checking out the cart of the logged in customer.
-         * It requires the user to be logged in and to be a customer.
-         * It returns a 200 status code if the cart was checked out.
-         * It fails if the cart is empty, there is no current cart in the database, or at least one of the products in the cart is not available in the required quantity.
+         * Endpoint for cart checkout.
+         * Authentication required.
+         * Validates cart contents before proceeding.
+         * Responds with success status on successful checkout.
          */
         this.router.patch(
             "/",
@@ -91,23 +86,23 @@ class CartRoutes {
         )
 
         /**
-         * Route for getting the history of the logged in customer's carts.
-         * It requires the user to be logged in and to be a customer.
-         * It returns the history of the logged in customer's carts (only carts that have been paid for are returned - the current cart is not included in the list).
-         */
+         * Retrieves the purchase history of the user's carts.
+         * Authentication required.
+         * Returns a list of past carts, excluding the current cart.
+        */
         this.router.get(
             "/history",
             (req: any, res: any, next: any) => this.controller.getCustomerCarts(req.user)
-                .then((carts: any /**Cart[] */) => res.status(200).json(carts))
+                .then((carts: any /**Cart[] ?? you sure about this? */) => res.status(200).json(carts))
                 .catch((err) => next(err))
         )
 
         /**
-         * Route for removing a product unit from a cart.
-         * It requires the user to be logged in and to be a customer.
-         * It requires the model of the product to remove as a route parameter. The model must be a non-empty string, the product must exist, must be in the current cart, and the customer must have a current cart
-         * It returns a 200 status code if the product was removed from the cart.
-         */
+         * Removes a specific product from the user's cart.
+         * Authentication required.
+         * Expects 'model' as a route parameter.
+         * Responds with success status upon removal.
+        */
         this.router.delete(
             "/products/:model",
             (req: any, res: any, next: any) => this.controller.removeProductFromCart(req.user, req.params.model)
@@ -118,11 +113,10 @@ class CartRoutes {
         )
 
         /**
-         * Route for removing all products from the current cart.
-         * It requires the user to be logged in and to be a customer.
-         * It fails if the user does not have a current cart.
-         * It returns a 200 status code if the products were removed from the cart.
-         */
+         * Clears all products from the current cart.
+         * Authentication required.
+         * Responds with success status upon clearing.
+        */
         this.router.delete(
             "/current",
             (req: any, res: any, next: any) => this.controller.clearCart(req.user)
@@ -131,10 +125,10 @@ class CartRoutes {
         )
 
         /**
-         * Route for deleting all carts.
-         * It requires the user to be authenticated and to be either an admin or a manager.
-         * It returns a 200 status code.
-         */
+         * Deletes all carts from the system.
+         * Restricted to admin or manager roles.
+         * Responds with success status upon deletion.
+        */
         this.router.delete(
             "/",
             (req: any, res: any, next: any) => this.controller.deleteAllCarts()
@@ -143,10 +137,10 @@ class CartRoutes {
         )
 
         /**
-         * Route for retrieving all carts of all users
-         * It requires the user to be authenticated and to be either an admin or a manager.
-         * It returns an array of carts.
-         */
+         * Retrieves all carts across all users.
+         * Restricted to admin or manager roles.
+         * Returns an array of all user carts.
+        */
         this.router.get(
             "/all",
             (req: any, res: any, next: any) => this.controller.getAllCarts()

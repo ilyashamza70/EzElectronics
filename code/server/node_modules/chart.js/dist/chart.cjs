@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.3
+ * Chart.js v4.4.2
  * https://www.chartjs.org
  * (c) 2024 Chart.js Contributors
  * Released under the MIT License
@@ -454,18 +454,15 @@ function applyStack(stack, value, dsIndex, options = {}) {
     }
     return value;
 }
-function convertObjectDataToArray(data, meta) {
-    const { iScale , vScale  } = meta;
-    const iAxisKey = iScale.axis === 'x' ? 'x' : 'y';
-    const vAxisKey = vScale.axis === 'x' ? 'x' : 'y';
+function convertObjectDataToArray(data) {
     const keys = Object.keys(data);
     const adata = new Array(keys.length);
     let i, ilen, key;
     for(i = 0, ilen = keys.length; i < ilen; ++i){
         key = keys[i];
         adata[i] = {
-            [iAxisKey]: key,
-            [vAxisKey]: data[key]
+            x: key,
+            y: data[key]
         };
     }
     return adata;
@@ -657,8 +654,7 @@ class DatasetController {
         const data = dataset.data || (dataset.data = []);
         const _data = this._data;
         if (helpers_segment.isObject(data)) {
-            const meta = this._cachedMeta;
-            this._data = convertObjectDataToArray(data, meta);
+            this._data = convertObjectDataToArray(data);
         } else if (_data !== data) {
             if (_data) {
                 helpers_segment.unlistenArrayEvents(_data, this);
@@ -1629,7 +1625,7 @@ class BarController extends DatasetController {
         const ilen = rects.length;
         let i = 0;
         for(; i < ilen; ++i){
-            if (this.getParsed(i)[vScale.axis] !== null && !rects[i].hidden) {
+            if (this.getParsed(i)[vScale.axis] !== null) {
                 rects[i].draw(this._ctx);
             }
         }
@@ -3457,7 +3453,7 @@ function createProxyAndListen(chart, type, listener) {
         return helpers_segment.getMaximumSize(canvas, width, height, aspectRatio);
     }
  isAttached(canvas) {
-        const container = canvas && helpers_segment._getParentNode(canvas);
+        const container = helpers_segment._getParentNode(canvas);
         return !!(container && container.isConnected);
     }
 }
@@ -5516,7 +5512,7 @@ function needContext(proxy, names) {
     return false;
 }
 
-var version = "4.4.3";
+var version = "4.4.2";
 
 const KNOWN_POSITIONS = [
     'top',

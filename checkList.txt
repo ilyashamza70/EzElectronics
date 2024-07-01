@@ -6,5 +6,5 @@ Timestamp:  Saturday 22/06/2024 at 19:02
     1)  userController has been proofed and checked.
     2)  userDAO is working in compliment with userController and working properly.
 
-3)  Start looking at testing part for User.
-4)  Same for Cart.
+3)  Start improving & rewriting test part for User.
+4)  Same for Cart, but is better.

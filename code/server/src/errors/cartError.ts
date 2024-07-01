@@ -1,74 +1,93 @@
-const CART_NOT_FOUND = "Cart not found"
-const PRODUCT_IN_CART = "Product already in cart"
-const PRODUCT_NOT_IN_CART = "Product not in cart"
-const WRONG_USER_CART = "Cart belongs to another user"
-const EMPTY_CART = "Cart is empty"
+const ERROR_MESSAGES = {
+    CartNotFound: "Cart not found",
+    ProductInCart: "Product already in cart",
+    ProductNotInCart: "Product not in cart",
+    WrongUserCart: "Cart belongs to another user",
+    EmptyCart: "Cart is empty",
+    GenericError: "An error occurred"
+};
 
+const ERROR_CODES = {
+    NotFound: 404,
+    Conflict: 409,
+    Forbidden: 403,
+    BadRequest: 400,
+    InternalServerError: 500
+};
 /**
- * Represents an error that occurs when a cart is not found.
+ * Base class for custom cart-related errors. It extends the native Error class,
+ * adding a custom message and a custom HTTP status code to better integrate with
+ * web responses.
  */
-class CartNotFoundError extends Error {
-    customMessage: string
-    customCode: number
+class CartError extends Error {
+    customMessage: string;
+    customCode: number;
 
-    constructor() {
-        super()
-        this.customMessage = CART_NOT_FOUND
-        this.customCode = 404
-    }
-}
-
-/**
- * Represents an error that occurs when a product is already in a cart.
- */
-class ProductInCartError extends Error {
-    customMessage: string
-    customCode: number
-
-    constructor() {
-        super()
-        this.customMessage = PRODUCT_IN_CART
-        this.customCode = 409
+    constructor(message: string, code: number) {
+        super(message);
+        this.customMessage = message;
+        this.customCode = code;
     }
 }
 
 /**
- * Represents an error that occurs when a product is not in a cart.
+ * Error class for handling cases where a cart is not found. This could be used
+ * when a user tries to access a cart that does not exist in the database.
  */
-class ProductNotInCartError extends Error {
-    customMessage: string
-    customCode: number
-
+class CartNotFoundError extends CartError {
     constructor() {
-        super()
-        this.customMessage = PRODUCT_NOT_IN_CART
-        this.customCode = 404
+        super(ERROR_MESSAGES.CartNotFound, ERROR_CODES.NotFound);
     }
 }
 
 /**
- * Represents an error that occurs when a cart belongs to another user.
+ * Error class for handling cases where a product is already in the cart. This
+ * could be used to prevent adding duplicate items to a cart.
  */
-class WrongUserCartError extends Error {
-    customMessage: string
-    customCode: number
-
+class ProductInCartError extends CartError {
     constructor() {
-        super()
-        this.customMessage = WRONG_USER_CART
-        this.customCode = 403
+        super(ERROR_MESSAGES.ProductInCart, ERROR_CODES.Conflict);
     }
 }
 
-class EmptyCartError extends Error {
-    customMessage: string
-    customCode: number
-
+/**
+ * Error class for handling cases where a product is not found in the cart. This
+ * could be used when attempting to remove or modify a product that isn't in the cart.
+ */
+class ProductNotInCartError extends CartError {
     constructor() {
-        super()
-        this.customMessage = EMPTY_CART
-        this.customCode = 400
+        super(ERROR_MESSAGES.ProductNotInCart, ERROR_CODES.NotFound);
     }
 }
 
-export { CartNotFoundError, ProductInCartError, ProductNotInCartError, WrongUserCartError, EmptyCartError }
+/**
+ * Error class for handling cases where a cart belongs to another user. This could
+ * be used to prevent users from accessing or modifying carts that do not belong to them.
+ */
+class WrongUserCartError extends CartError {
+    constructor() {
+        super(ERROR_MESSAGES.WrongUserCart, ERROR_CODES.Forbidden);
+    }
+}
+
+/**
+ * Error class for handling cases where a cart is empty but an operation requiring
+ * items in the cart is attempted. This could be used for checkout processes or
+ * bulk modifications where an empty cart is invalid.
+ */
+class EmptyCartError extends CartError {
+    constructor() {
+        super(ERROR_MESSAGES.EmptyCart, ERROR_CODES.BadRequest);
+    }
+}
+
+/**
+ * Generic error class for handling any other cart-related errors that do not fit
+ * into the specific categories above. This provides a fallback error handling mechanism.
+ */
+class GenericCartError extends CartError {
+    constructor() {
+        super(ERROR_MESSAGES.GenericError, ERROR_CODES.InternalServerError);
+    }
+}
+export { CartNotFoundError, ProductInCartError, ProductNotInCartError, WrongUserCartError, EmptyCartError, GenericCartError };

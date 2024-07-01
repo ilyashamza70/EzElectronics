@@ -1,6 +1,14 @@
 import { User } from "../components/user"
 import UserDAO from "../dao/userDAO"
 import { Role } from "../components/user"
+import { UserNotAdminError } from "../errors/userError"
+
+/**         LOG INFO 15/06/24
+ * ALL check and errors have been moved to userDAO to have all in one place.
+ * All the methods are now async and return a promise.
+ *  Check & review each function singualarly.
+**/
+
 /**
  * Represents a controller for managing users.
  * All methods of this class must interact with the corresponding DAO class to retrieve or store data.
@@ -29,7 +37,7 @@ class UserController {
      * Returns all users.
      * @returns A Promise that resolves to an array of users.
      */
-    async getUsers() /**:Promise<User[]> */ { 
+    async getUsers() :Promise<User[]> { 
         return this.dao.getUser()
     }
 
@@ -42,15 +50,8 @@ class UserController {
         return this.dao.getUsersByRole(role as Role);
      }
 
-     /**
-     * Deletes all non-Admin users
-     * @returns A Promise that resolves to true if all non-Admin users have been deleted.
-     */
-    async deleteAll(): Promise<Boolean> { 
-        return this.dao.deleteAll()
-    }
-
-    /**
+    /**         ONLY FUNCTION DOING A CHECK... maybe move all here?? from DAO?
+                SEE TODOLIST
      * Returns a specific user.
      * The function has different behavior depending on the role of the user calling it:
      * - Admins can retrieve any user
@@ -59,11 +60,11 @@ class UserController {
      * @returns A Promise that resolves to the user with the specified username.
      */
     async getUserByUsername(user: User, username: string) :Promise<User>  {
-        if(user.role === Role.ADMIN || user.username === username){
-            return this.dao.getUser();
-        }
-        else
+        if (user.role === Role.ADMIN || user.username === username) {
             return this.dao.getUserByUsername(username);
+        } else {
+            throw new UserNotAdminError;
+        }
      }
 
     /**
@@ -78,10 +79,17 @@ class UserController {
         if (user.role === Role.ADMIN || user.username === username) {
             return this.dao.deleteUser(username);
         } else {
-            throw new Error('Unauthorized Action'); //Only for debugginf purposes remove later on and change error.
+            throw new Error('Unauthorized Action');
         }
      }
 
+    /**
+     * Deletes all non-Admin users
+     * @returns A Promise that resolves to true if all non-Admin users have been deleted.
+     */
+    async deleteAll(): Promise<Boolean> { 
+        return this.dao.deleteAll()
+    }
 
     /**
      * Updates the personal information of one user. The user can only update their own information.

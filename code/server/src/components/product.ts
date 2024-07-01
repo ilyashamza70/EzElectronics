@@ -7,7 +7,9 @@ class Product {
     category: Category;
     arrivalDate: string | null;
     details: string | null;
-    quantity: number
+    quantity: number;
+    sellingDate ?:string| null;
+    changeDate ?: string|null;
 
 
     /**

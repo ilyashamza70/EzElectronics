@@ -1,6 +1,5 @@
 import express, { Router } from "express"
 import Authenticator from "./auth"
-import { body, param } from "express-validator"
 import { User } from "../components/user"
 import ErrorHandler from "../helper"
 import UserController from "../controllers/userController"
@@ -9,6 +8,9 @@ import UserController from "../controllers/userController"
  * Represents a class that defines the routes for handling users.
  */
 class UserRoutes {
+    static createUser(): any {
+        throw new Error("Method not implemented.")
+    }
     private router: Router
     private authService: Authenticator
     private errorHandler: ErrorHandler

@@ -1,50 +1,94 @@
+import { ProductReview } from "../components/review";
 import { User } from "../components/user";
 import ReviewDAO from "../dao/reviewDAO";
+import { ExistingReviewError, NoReviewProductError } from '../errors/reviewError';
+import { ProductNotFoundError } from "../errors/productError";
 
 class ReviewController {
     private dao: ReviewDAO
 
     constructor() {
-        this.dao = new ReviewDAO
+        this.dao = new ReviewDAO();
     }
 
-    /**
-     * Adds a new review for a product
-     * @param model The model of the product to review
-     * @param user The username of the user who made the review
-     * @param score The score assigned to the product, in the range [1, 5]
-     * @param comment The comment made by the user
-     * @returns A Promise that resolves to nothing
-     */
-    async addReview(model: string, user: User, score: number, comment: string) /**:Promise<void> */ { }
+    async addReview(model: string, user: User, score: number, comment: string): Promise<void> {
+        if (!model) {
+            throw new Error("Model parameter cannot be empty.");
+        }
+        if (score < 1 || score > 5) {
+            throw new Error("Score must be between 1 and 5.");
+        }
+        if (!comment) {
+            throw new Error("Comment cannot be null.");
+        }
+    
+        try {
+            const date = new Date().toISOString().split('T')[0]; 
+            console.log(`Attempting to add review: model=${model}, user=${user.username}, score=${score}, comment=${comment}`);
+            
+            await this.dao.addReview(model, user.username, score, comment, date);
+            console.log(`Review added successfully for model ${model} by user ${user.username}`);
+            
+        } catch (error) {
+            if (error instanceof ExistingReviewError || error instanceof ProductNotFoundError) {
+                throw error;
+            } else {
+                throw new Error("Internal Server Error"); 
+            }
+        }
+    }
+    
 
-    /**
-     * Returns all reviews for a product
-     * @param model The model of the product to get reviews from
-     * @returns A Promise that resolves to an array of ProductReview objects
-     */
-    async getProductReviews(model: string) /**:Promise<ProductReview[]> */ { }
+    async getProductReviews(model: string): Promise<ProductReview[]> {
+        if (!model) {
+            throw new Error("Model parameter cannot be empty.");
+        }
+        try {
+            return await this.dao.getProductReviews(model);
+        } catch (error) {
+            throw error;
+        }
+    }
 
-    /**
-     * Deletes the review made by a user for a product
-     * @param model The model of the product to delete the review from
-     * @param user The user who made the review to delete
-     * @returns A Promise that resolves to nothing
-     */
-    async deleteReview(model: string, user: User) /**:Promise<void> */ { }
+    async deleteReview(model: string, user: User): Promise<void> {
+        if (!model) {
+            throw new Error("Model parameter cannot be empty.");
+        }
+        try {
+            await this.dao.deleteReview(model, user.username);
+        } catch (error) {
+            if (error instanceof ProductNotFoundError) {
+                throw error;
+            } else if(error instanceof NoReviewProductError) {
+                throw error;
+            } else {
+                throw new Error("Internal Server Error");
+            }
+        }
+    }
 
-    /**
-     * Deletes all reviews for a product
-     * @param model The model of the product to delete the reviews from
-     * @returns A Promise that resolves to nothing
-     */
-    async deleteReviewsOfProduct(model: string) /**:Promise<void> */ { }
+    async deleteReviewsOfProduct(model: string): Promise<void> {
+        if (!model) {
+            throw new Error("Model parameter cannot be empty.");
+        }
+        try {
+            await this.dao.deleteReviewsOfProduct(model);
+        } catch (error) {
+            if(error instanceof ProductNotFoundError) {
+                throw error;
+            } else {
+                throw new Error("Internal Server Error");
+            }
+        }
+    }
 
-    /**
-     * Deletes all reviews of all products
-     * @returns A Promise that resolves to nothing
-     */
-    async deleteAllReviews() /**:Promise<void> */ { }
+    async deleteAllReviews(): Promise<void> {
+        try {
+            await this.dao.deleteAllReviews();
+        } catch (error) {
+            throw new Error("Internal Server Error");
+        }
+    }
 }
 
 export default ReviewController;

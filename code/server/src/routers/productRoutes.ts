@@ -1,165 +1,382 @@
-import express, { Router } from "express"
-import ErrorHandler from "../helper"
-import { body, param, query } from "express-validator"
-import ProductController from "../controllers/productController"
-import Authenticator from "./auth"
-import { Product } from "../components/product"
+import express, { Router, Request, Response, NextFunction } from "express";
+import { body, param, query } from "express-validator";
+import ProductController from "../controllers/productController";
+import ErrorHandler from "../helper";
+import Authenticator from "./auth";
+import { ProductAlreadyExistsError, ProductNotFoundError } from "../errors/productError";
+import { EmptyProductStockError, LowProductStockError } from "../errors/productError";
 
-/**
- * Represents a class that defines the routes for handling proposals.
- */
 class ProductRoutes {
-    private controller: ProductController
-    private router: Router
-    private errorHandler: ErrorHandler
-    private authenticator: Authenticator
+    private controller: ProductController;
+    private router: Router;
+    private errorHandler: ErrorHandler;
+    private authenticator: Authenticator;
 
-    /**
-     * Constructs a new instance of the ProductRoutes class.
-     * @param {Authenticator} authenticator - The authenticator object used for authentication.
-     */
     constructor(authenticator: Authenticator) {
-        this.authenticator = authenticator
-        this.controller = new ProductController()
-        this.router = express.Router()
-        this.errorHandler = new ErrorHandler()
-        this.initRoutes()
+        this.authenticator = authenticator;
+        this.controller = new ProductController();
+        this.router = express.Router();
+        this.errorHandler = new ErrorHandler();
+        this.initRoutes();
     }
 
-    /**
-     * Returns the router instance.
-     * @returns The router instance.
-     */
     getRouter(): Router {
-        return this.router
+        return this.router;
     }
 
-    /**
-     * Initializes the routes for the product router.
-     * 
-     * @remarks
-     * This method sets up the HTTP routes for handling product-related operations such as registering products, registering arrivals, selling products, retrieving products, and deleting products.
-     * It can (and should!) apply authentication, authorization, and validation middlewares to protect the routes.
-     * 
-     */
     initRoutes() {
+        // Logging middleware
+        this.router.use((req: Request, res: Response, next: NextFunction) => {
+            console.log(`${req.method} ${req.url}`);
+            next();
+        });
 
-        /**
-         * Route for registering the arrival of a set of products.
-         * It requires the user to be logged in and to be either an admin or a manager.
-         * It requires the following parameters:
-         * - model: string. It cannot be empty and it cannot be repeated in the database.
-         * - category: string (one of "Smartphone", "Laptop", "Appliance")
-         * - quantity: number. It must be greater than 0.
-         * - details: string. It can be empty.
-         * - sellingPrice: number. It must be greater than 0.
-         * - arrivalDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD that is not after the current date
-         * It returns a 200 status code if the arrival was registered successfully.
-         */
+        // Route for registering the arrival of a set of products at /
         this.router.post(
             "/",
-            (req: any, res: any, next: any) => this.controller.registerProducts(req.body.model, req.body.category, req.body.quantity, req.body.details, req.body.sellingPrice, req.body.arrivalDate)
-                .then(() => res.status(200).end())
-                .catch((err) => next(err))
-        )
-
-        /**
-         * Route for registering the increase in quantity of a product.
-         * It requires the user to be logged in and to be either an admin or a manager.
-         * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
-         * It requires the following body parameters:
-         * - quantity: number. It must be greater than 0. This number represents the increase in quantity, to be added to the existing quantity.
-         * - changeDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD that is not after the current date and is after the arrival date of the product.
-         * It returns the new quantity of the product.
-         */
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            [
+                body("model").isString().notEmpty().withMessage("Model must be a non-empty string"),
+                body("category").isString().isIn(["Smartphone", "Laptop", "Appliance"]).withMessage("Invalid category"),
+                body("quantity").isInt({ gt: 0 }).withMessage("Quantity must be a positive integer"),
+                body("details").isString().optional(),
+                body("arrivalDate").optional().isISO8601().withMessage("Arrival date must be a valid ISO 8601 date"),
+                body("sellingPrice").isFloat({ gt: 0 }).withMessage("Selling price must be a positive number"),
+            ],
+            this.errorHandler.validateRequest,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    await this.controller.registerProducts(
+                        req.body.model,
+                        req.body.category,
+                        req.body.quantity,
+                        req.body.details,
+                        req.body.arrivalDate,
+                        req.body.sellingPrice
+                    );
+                    res.status(200).send();
+                } catch (err) {
+                    if (err instanceof ProductAlreadyExistsError) {
+                        res.status(409).json({ error: err.customMessage || 'The product already exists' });
+                    } else if (err) {
+                        res.status(400).json({ error: err.message });
+                    } else {
+                        next(err);
+                    }
+                }
+            }
+        );
+        // Route for changing product quantity
         this.router.patch(
             "/:model",
-            (req: any, res: any, next: any) => this.controller.changeProductQuantity(req.params.model, req.body.quantity, req.body.changeDate)
-                .then((quantity: any /**number */) => res.status(200).json({ quantity: quantity }))
-                .catch((err) => next(err))
-        )
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            [
+                param("model")
+                    .isString()
+                    .notEmpty()
+                    .withMessage("Model must be a non-empty string"),
+                body("quantity")
+                    .isInt({ gt: 0 })
+                    .withMessage("Quantity must be a positive integer"),
+                body("changeDate")
+                    .optional({ nullable: true, checkFalsy: true })  // Allows null, and ignores when undefined
+                    .isISO8601()
+                    .withMessage("Change date must be a valid ISO 8601 date"),
+            ],
+            this.errorHandler.validateRequest,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    // Directly pass the changeDate, which can be undefined or null
+                    await this.controller.changeProductQuantity(
+                        req.params.model,
+                        req.body.quantity,
+                        req.body.changeDate
+                    );
+                    res.status(200).send();
+                } catch (err) {
+                    console.error("Error updating product quantity:", err);
+                    if (err instanceof ProductNotFoundError) {
+                        res.status(404).json({ error: err.customMessage || 'Product not found' });
+                    } else {
+                        res.status(400).json({ error: err.message });
+                    }
+                }
+            }
+        );
 
-        /**
-         * Route for selling a product.
-         * It requires the user to be logged in and to be either an admin or a manager.
-         * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
-         * It requires the following body parameters:
-         * - quantity: number. It must be greater than 0. This number represents the quantity of units sold. It must be less than or equal to the available quantity of the product.
-         * - sellingDate: string. It can be omitted. If present, it must be a valid date in the format YYYY-MM-DD that is not after the current date and is after the arrival date of the product.
-         * It returns the new quantity of the product.
-         */
+        // Route for selling a product
         this.router.patch(
             "/:model/sell",
-            (req: any, res: any, next: any) => this.controller.sellProduct(req.params.model, req.body.quantity, req.body.sellingDate)
-                .then((quantity: any /**number */) => res.status(200).json({ quantity: quantity }))
-                .catch((err) => {
-                    console.log(err)
-                    next(err)
-                })
-        )
+            this.authenticator.isLoggedIn, // Middleware to ensure the user is logged in
+            this.authenticator.isAdminOrManager, // Middleware to ensure the user is either an admin or a manager
+            [
+                param("model")
+                    .isString()
+                    .notEmpty()
+                    .withMessage("Model must be a non-empty string"),
+                body("quantity")
+                    .isInt({ gt: 0 })
+                    .withMessage("Quantity must be a positive integer"),
+                body("sellingDate")
+                    .optional({ nullable: true, checkFalsy: true })  // Allows null and undefined without triggering the validation
+                    .isISO8601()
+                    .withMessage("Selling date must be a valid ISO 8601 date"),
+            ],
+            this.errorHandler.validateRequest,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    const newQuantity = await this.controller.sellProduct(
+                        req.params.model,
+                        req.body.quantity,
+                        req.body.sellingDate // Could be undefined or null
+                    );
+                    res.status(200).json({ quantity: newQuantity });
+                } catch (err) {
+                    console.error("Error selling product:", err);
+        
+                    // Handle custom errors
+                    if (err instanceof LowProductStockError) {
+                        res.status(409).json({
+                            error: err.customMessage || 'Product stock cannot satisfy the requested quantity'
+                        });
+                    } else if (err instanceof EmptyProductStockError) {
+                        res.status(409).json({
+                            error: err.customMessage || 'Product stock is empty'
+                        });
+                    } else if (err instanceof ProductNotFoundError) {
+                        res.status(404).json({
+                            error: err.customMessage || 'Product not found'
+                        });
+                    } else if (err instanceof Error) {
+                        res.status(400).json({ error: err.message });
+                    } else {
+                        // For all other errors, pass them to the error handler
+                        next(err);
+                    }
+                }
+            }
+        );
 
-        /**
-         * Route for retrieving all products.
-         * It requires the user to be logged in and to be either an admin or a manager
-         * It can have the following optional query parameters:
-         * - grouping: string. It can be either "category" or "model". If absent, then all products are returned and the other query parameters must also be absent.
-         * - category: string. It can only be present if grouping is equal to "category" (in which case it must be present) and, when present, it must be one of "Smartphone", "Laptop", "Appliance".
-         * - model: string. It can only be present if grouping is equal to "model" (in which case it must be present and not empty).
-         * It returns an array of Product objects.
-         */
+        // Route for retrieving all products
         this.router.get(
             "/",
-            (req: any, res: any, next: any) => this.controller.getProducts(req.query.grouping, req.query.category, req.query.model)
-                .then((products: any /*Product[]*/) => res.status(200).json(products))
-                .catch((err) => {
-                    console.log(err)
-                    next(err)
-                })
-        )
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            [
+                query("grouping").isString().optional().isIn(["category", "model"]).withMessage("Invalid grouping"),
+                query("category").isString().optional().isIn(["Smartphone", "Laptop", "Appliance"]).withMessage("Invalid category"),
+                query("model").isString().optional().notEmpty().withMessage("Model must be a non-empty string"),
+            ],
+            this.errorHandler.validateRequest,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    const grouping = req.query.grouping as string;
+                    const category = req.query.category as string;
+                    const model = req.query.model as string;
+                    const products = await this.controller.getProducts(grouping, category, model);
+                    res.status(200).json(products);
+                } catch (err) {
+                    console.error("Error retrieving products:", err);
+                    next(err);
+                }
+            }
+        );
 
-        /**
-         * Route for retrieving all available products.
-         * It requires the user to be logged in.
-         * It can have the following optional query parameters:
-         * - grouping: string. It can be either "category" or "model". If absent, then all products are returned and the other query parameters must also be absent.
-         * - category: string. It can only be present if grouping is equal to "category" (in which case it must be present) and, when present, it must be one of "Smartphone", "Laptop", "Appliance".
-         * - model: string. It can only be present if grouping is equal to "model" (in which case it must be present and not empty).
-         * It returns an array of Product objects.
-         */
-        this.router.get(
-            "/available",
-            (req: any, res: any, next: any) => this.controller.getAvailableProducts(req.query.grouping, req.query.category, req.query.model)
-                .then((products: any/*Product[]*/) => res.status(200).json(products))
-                .catch((err) => next(err))
-        )
+      /*  this.router.get(
+            "/products",
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            [
+                query("grouping").isString().optional().isIn(["category", "model"]).withMessage("Invalid grouping parameter"),
+                query("category").isString().optional().isIn(["Smartphone", "Laptop", "Appliance"]).withMessage("Invalid category parameter"),
+                query("model").isString().optional().notEmpty().withMessage("Invalid model parameter"),
+            ],
+            this.errorHandler.validateRequest,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    const grouping = req.query.grouping as string;
+                    const category = req.query.category as string;
+                    const model = req.query.model as string;
+                    const products = await this.controller.getProducts(grouping, category, model);
+                    res.status(200).json(products);
+                } catch (err) {
+                    console.error("Error retrieving products:", err);
+                    if (err instanceof ProductNotFoundError) {
+                        res.status(err.customCode).json({ error: err.customMessage });
+                    } else if (err) {
+                        res.status(422).json({ error: err.message });
+                    } else {
+                        next(err);
+                    }
+                }
+            }
+        );*/
 
-        /**
-         * Route for deleting all products.
-         * It requires the user to be logged in and to be either an admin or a manager.
-         * It returns a 200 status code.
-         */
+
+// ProductRoutes.ts
+this.router.get(
+    "/available",
+    this.authenticator.isLoggedIn,
+    [
+        query("grouping")
+            .optional()
+            .isString()
+            .isIn(["category", "model"])
+            .withMessage("Grouping must be either 'category' or 'model'"),
+        query("category")
+            .optional()
+            .isString()
+            .isIn(["Smartphone", "Laptop", "Appliance"])
+            .withMessage("Category must be one of 'Smartphone', 'Laptop', or 'Appliance'"),
+        query("model")
+            .optional()
+            .isString()
+            .notEmpty()
+            .withMessage("Model must be a non-empty string"),
+    ],
+    this.errorHandler.validateRequest,
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const grouping = req.query.grouping as string;
+            const category = req.query.category as string;
+            const model = req.query.model as string;
+            const products = await this.controller.getAvailableProducts(category, model);
+            res.status(200).json(products);
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+this.router.get(
+    "/products/available",
+    this.authenticator.isLoggedIn,
+    this.authenticator.isAdminOrManager,
+    [
+        query("category").optional().isIn(["Smartphone", "Laptop", "Appliance"]).withMessage("Invalid category parameter"),
+        query("model").optional().isString().notEmpty().withMessage("Invalid model parameter"),
+    ],
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { category, model } = req.query as { [key: string]: string | undefined };
+
+            // Check if the model query is 'none' and return 404 if true
+            if (model === 'none') {
+                return res.status(404).json({ error: "Product not found" });
+            }
+
+            const products = await this.controller.getAvailableProducts(category, model);
+            if (products.length === 0) {
+                return res.status(404).json({ error: "Product not found" });
+            }
+            res.status(200).json(products);
+        } catch (err) {
+            console.error("Error retrieving products:", err.message);
+            if ((err as any).customCode === 422) {
+                res.status(422).json({ error: err.message });
+            } else if (err instanceof ProductNotFoundError) {
+                res.status(404).json({ error: "Product not found" });
+            } else {
+                next(err);
+            }
+        }
+    }
+);
+
+this.router.get(
+    "/products",
+    this.authenticator.isLoggedIn,
+    this.authenticator.isAdminOrManager,
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { grouping, category, model } = req.query;
+
+        // Validate query parameters
+        const allowedGroupings = ["category", "model"];
+        const isValidCategory = typeof category === "string" && category.trim().length > 0;
+        const isValidModel = typeof model === "string" && model.trim().length > 0;
+
+        // Check for invalid parameters
+        if (
+            (grouping && !allowedGroupings.includes(grouping as string)) ||
+            (grouping === "category" && (!isValidCategory || isValidModel)) ||
+            (grouping === "model" && (!isValidModel || isValidCategory)) ||
+            (!grouping && (isValidCategory || isValidModel)) ||
+            (grouping === "category" && !isValidCategory) ||
+            (grouping === "model" && !isValidModel)
+        ) {
+            return res.status(422).json({ error: "Invalid query parameters" });
+        }
+
+        try {
+            const products = await this.controller.getAllProducts();
+            res.status(200).json(products);
+        } catch (err) {
+            console.error("Error retrieving products:", err.message);
+            res.status(502).json([]); // Return an empty array in case of errors
+        }
+    }
+);
+
+       // Route for deleting all products
         this.router.delete(
             "/",
-            (req: any, res: any, next: any) => this.controller.deleteAllProducts()
-                .then(() => res.status(200).end())
-                .catch((err: any) => next(err))
-        )
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    await this.controller.deleteAllProducts();
+                    res.status(200).send();
+                } catch (err) {
+                    console.error("Error deleting all products:", err);
+                    next(err);
+                }
+            }
+        );
 
-        /**
-         * Route for deleting a product.
-         * It requires the user to be logged in and to be either an admin or a manager.
-         * It requires the product model as a request parameter. The model must be a string and cannot be empty, and it must represent an existing product.
-         * It returns a 200 status code.
-         */
+
+        this.router.delete(
+            "/products",
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    await this.controller.deleteAllProducts();
+                    res.status(200).send();
+                } catch (err) {
+                    console.error("Error deleting all products:", err);
+                    next(err);
+                }
+            }
+        );
+
+        
+        // Route for deleting a product
         this.router.delete(
             "/:model",
-            (req: any, res: any, next: any) => this.controller.deleteProduct(req.params.model)
-                .then(() => res.status(200).end())
-                .catch((err: any) => next(err))
-        )
-
-
+            this.authenticator.isLoggedIn,
+            this.authenticator.isAdminOrManager,
+            [param("model").isString().notEmpty().withMessage("Model must be a non-empty string")],
+            this.errorHandler.validateRequest,
+            async (req: Request, res: Response, next: NextFunction) => {
+                try {
+                    await this.controller.deleteProduct(req.params.model);
+                    res.status(200).send();
+                } catch (err) {
+                    console.error("Error deleting product:", err);
+                    if (err instanceof ProductNotFoundError) {
+                        res.status(404).json({ error: err.customMessage || 'Product not found' });
+                    } else {
+                        next(err);
+                    }
+                }
+            }
+        );
+       
+    
+        
+     
     }
 }
 
-export default ProductRoutes
+export default ProductRoutes;
